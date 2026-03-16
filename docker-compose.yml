@@ -1,0 +1,108 @@
+services:
+  db:
+    image: mysql:8.0
+    container_name: v2board-db
+    restart: unless-stopped
+    environment:
+      MYSQL_DATABASE: v2board
+      MYSQL_ROOT_PASSWORD: v2board_root_password
+      MYSQL_USER: v2board
+      MYSQL_PASSWORD: v2board_password
+    volumes:
+      - dbdata:/var/lib/mysql
+    ports:
+      - "3306:3306"
+    networks:
+      - v2board
+    healthcheck:
+      test: ["CMD", "mysqladmin", "ping", "-h", "localhost", "-u", "v2board", "-pv2board_password"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  redis:
+    image: redis:alpine
+    container_name: v2board-redis
+    restart: unless-stopped
+    ports:
+      - "6379:6379"
+    networks:
+      - v2board
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 10s
+      timeout: 3s
+      retries: 3
+
+  app:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: v2board-app
+    restart: unless-stopped
+    working_dir: /var/www
+    volumes:
+      - ./:/var/www
+      - ./docker/php/local.ini:/usr/local/etc/php/conf.d/local.ini
+    networks:
+      - v2board
+    depends_on:
+      db:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+
+  nginx:
+    image: nginx:alpine
+    container_name: v2board-nginx
+    restart: unless-stopped
+    ports:
+      - "80:80"
+      - "443:443"
+    volumes:
+      - ./:/var/www
+      - ./docker/nginx/conf.d:/etc/nginx/conf.d
+    networks:
+      - v2board
+    depends_on:
+      - app
+
+  horizon:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: v2board-horizon
+    restart: unless-stopped
+    working_dir: /var/www
+    entrypoint: ["/bin/bash", "-c"]
+    command:
+      - |
+        # Wait for app container to finish initialization
+        while [ ! -f /var/www/vendor/autoload.php ]; do
+          echo "Waiting for composer dependencies..."
+          sleep 5
+        done
+        # Wait for .env file with APP_KEY
+        while [ ! -f /var/www/.env ] || grep -q "APP_KEY=$$" /var/www/.env || grep -q 'APP_KEY=""' /var/www/.env; do
+          echo "Waiting for .env configuration..."
+          sleep 5
+        done
+        echo "Starting Horizon..."
+        php artisan horizon
+    volumes:
+      - ./:/var/www
+    networks:
+      - v2board
+    depends_on:
+      db:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+
+networks:
+  v2board:
+    driver: bridge
+
+volumes:
+  dbdata:
+    driver: local
