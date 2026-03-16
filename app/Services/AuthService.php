@@ -33,7 +33,7 @@ class AuthService
         ]);
         return [
             'token' => $this->user->token,
-            'is_admin' => $this->user->is_admin,
+            'is_admin' => (bool)$this->user->is_admin,
             'auth_data' => $authData
         ];
     }

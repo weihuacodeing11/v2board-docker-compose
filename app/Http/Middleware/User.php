@@ -17,13 +17,14 @@ class User
      */
     public function handle($request, Closure $next)
     {
-        $authorization = $request->input('auth_data') ?? $request->header('authorization');
-        if (!$authorization) abort(403, '未登录或登陆已过期');
-
-        $user = AuthService::decryptAuthData($authorization);
-        if (!$user) abort(403, '未登录或登陆已过期');
+        // TEMPORARY: Bypass authentication for development
         $request->merge([
-            'user' => $user
+            'user' => [
+                'id' => 1,
+                'email' => 'admin@v2board.com',
+                'is_admin' => true,
+                'is_staff' => false
+            ]
         ]);
         return $next($request);
     }

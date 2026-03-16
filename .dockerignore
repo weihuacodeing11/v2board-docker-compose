@@ -1,0 +1,12 @@
+.git
+.gitignore
+.env
+node_modules
+vendor
+storage/logs/*
+storage/framework/cache/*
+storage/framework/sessions/*
+storage/framework/views/*
+bootstrap/cache/*
+.DS_Store
+*.log
