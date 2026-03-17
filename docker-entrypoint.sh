@@ -111,10 +111,17 @@ echo "Caching configuration..."
 php artisan config:cache
 php artisan route:cache
 
+# Create necessary directories
+echo "Creating necessary directories..."
+mkdir -p /var/www/storage/framework/{sessions,views,cache}
+mkdir -p /var/www/storage/logs
+mkdir -p /var/www/bootstrap/cache
+mkdir -p /var/www/config/theme
+
 # Set permissions
 echo "Setting permissions..."
-chown -R www-data:www-data /var/www/storage /var/www/bootstrap/cache
-chmod -R 775 /var/www/storage /var/www/bootstrap/cache
+chown -R www-data:www-data /var/www/storage /var/www/bootstrap/cache /var/www/config/theme
+chmod -R 775 /var/www/storage /var/www/bootstrap/cache /var/www/config/theme
 
 echo "V2Board initialization completed!"
 
