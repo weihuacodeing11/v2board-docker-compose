@@ -118,10 +118,10 @@ mkdir -p /var/www/storage/logs
 mkdir -p /var/www/bootstrap/cache
 mkdir -p /var/www/config/theme
 
-# Set permissions
+# Set permissions (using 777 for development/testing to avoid permission issues with volume mounts)
 echo "Setting permissions..."
-chown -R www-data:www-data /var/www/storage /var/www/bootstrap/cache /var/www/config/theme
-chmod -R 775 /var/www/storage /var/www/bootstrap/cache /var/www/config/theme
+chmod -R 777 /var/www/storage /var/www/bootstrap/cache /var/www/config/theme
+chown -R www-data:www-data /var/www/storage /var/www/bootstrap/cache /var/www/config/theme 2>/dev/null || true
 
 echo "V2Board initialization completed!"
 
